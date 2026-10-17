@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: create repository
+  name: create-repository
   title: Create a new project
   description: Provision a new project with a GitHub repository, a Backstage catalog-info.yaml file, and a Kubernetes deployment.
 spec:
