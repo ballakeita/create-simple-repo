@@ -1,0 +1,6 @@
+test for my app
+
+
+
+The app name is : ${{ values.app_name }}
+the app environment is : ${{ values.app_env }}

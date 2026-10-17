@@ -1,0 +1,79 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create repository
+  title: Create a new project
+  description: Provision a new project with a GitHub repository, a Backstage catalog-info.yaml file, and a Kubernetes deployment.
+spec:
+  owner: automation
+  type: service
+
+  # 1. LE FORMULAIRE
+  parameters:
+    - title: Your project details
+      required:
+        - component_id
+        - environment
+      properties:
+        component_id:
+          title: repository name
+          type: string
+          description: Unique name of the component
+          pattern: '^[a-z0-9-]+$'
+        environment:
+          title: Environment
+          type: string
+          description: Environment where the component will be deployed
+          enum:
+            - dev
+            - prod
+            
+    # Ajout du sélecteur de dépôt GitHub (nécessaire pour l'étape publish)
+    # - title: Choose a location
+    #   required:
+    #     - repoUrl
+    #   properties:
+    #     repoUrl:
+    #       title: Repository Location
+    #       type: string
+    #       ui:field: RepoUrlPicker
+    #       ui:options:
+    #         allowedHosts:
+    #           - github.com
+
+  # 2. LES ACTIONS
+  steps:
+    - id: fetchBase
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./template
+        values:
+          # On utilise maintenant component_id saisi dans le formulaire
+          app_name: ${{ parameters.component_id }}
+          app_env: ${{ parameters.environment }}
+
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        description: This is ${{ parameters.component_id }}
+        repoUrl: github.com?owner=ballakeita&repo=${{ parameters.component_id }}
+        defaultBranch: 'main'
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  # 3. LE RÉSULTAT
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
